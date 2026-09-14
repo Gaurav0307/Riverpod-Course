@@ -8,10 +8,10 @@ class UserRepository {
       var response = await Dio().get(
         'https://jsonplaceholder.typicode.com/users',
       );
-      return (response.data as List).map((e) => User.fromJson(e)).toList();
+      return (response.data as List).map((e) => User.fromMap(e)).toList();
     } catch (e) {
       debugPrint("Exception:-> $e");
-      return [];
+      rethrow;
     }
   }
 }

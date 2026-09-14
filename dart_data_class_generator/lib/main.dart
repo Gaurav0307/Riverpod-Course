@@ -1,3 +1,4 @@
+import 'package:dart_data_class_generator/pages/user_list_page.dart';
 import 'package:dart_data_class_generator/widgets/custom_button.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
@@ -23,7 +24,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Riverpod Tutorials',
-      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
+      theme: ThemeData(
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.deepPurple.shade400,
+          centerTitle: true,
+          titleTextStyle: const TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
       home: MyHomePage(),
     );
   }
@@ -40,7 +52,10 @@ class MyHomePage extends StatelessWidget {
         child: ListView(
           shrinkWrap: true,
           padding: const EdgeInsets.all(20.0),
-          children: [CustomButton(title: 'Person', child: PersonPage())],
+          children: [
+            CustomButton(title: 'Person', child: PersonPage()),
+            CustomButton(title: 'User List', child: UserListPage()),
+          ],
         ),
       ),
     );
