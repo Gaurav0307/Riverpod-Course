@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:riverpod_freezed/pages/collections_page.dart';
+import 'package:riverpod_freezed/pages/hotel_list_page.dart';
 import 'package:riverpod_freezed/pages/method.dart';
 import 'package:riverpod_freezed/pages/mutable_person_page.dart';
 import 'package:riverpod_freezed/pages/person_page.dart';
@@ -52,6 +53,7 @@ class Home extends StatelessWidget {
             CustomButton(title: "Mutable Person", child: MutablePersonPage()),
             CustomButton(title: "Collections", child: CollectionsPage()),
             CustomButton(title: "Method", child: MethodPage()),
+            CustomButton(title: "Hotel List", child: HotelListPage()),
           ],
         ),
       ),
