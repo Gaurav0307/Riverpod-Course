@@ -1,5 +1,6 @@
 import 'package:riverpod_provider/pages/auto_dispose/auto_dispose_page.dart';
 import 'package:riverpod_provider/pages/auto_dispose_family/auto_dispose_family_page.dart';
+import 'package:riverpod_provider/pages/auto_dispose_family_test/auto_dispose_family_test_page.dart';
 import 'package:riverpod_provider/pages/basic/basic_page.dart';
 import 'package:riverpod_provider/pages/family/family_page.dart';
 import 'package:riverpod_provider/widgets/custom_button.dart';
@@ -64,6 +65,10 @@ class MyHomePage extends StatelessWidget {
             CustomButton(
               title: 'AutoDisposeFamilyProvider',
               child: AutoDisposeFamilyPage(),
+            ),
+            CustomButton(
+              title: 'AutoDisposeFamilyTestProvider',
+              child: AutoDisposeFamilyTestPage(),
             ),
           ],
         ),
