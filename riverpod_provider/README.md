@@ -27,9 +27,9 @@ final api = ref.watch(apiProvider);
 
 ### Lifecycle
 
-* Created on first use.
-* Remains in memory.
-* Not automatically disposed.
+- Created on first use.
+- Remains in memory.
+- Not automatically disposed.
 
 ### Good For
 
@@ -324,3 +324,243 @@ FutureProvider.autoDispose.family // Detail screens
 ```
 
 This combination covers the majority of Riverpod use cases in production Flutter applications.
+
+---
+
+---
+
+`riverpod_generator` is a code-generation package for Riverpod that automatically creates providers for you using annotations.
+
+Instead of manually writing providers like this:
+
+```dart
+final counterProvider = StateProvider<int>((ref) => 0);
+```
+
+you write:
+
+```dart
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'counter_provider.g.dart';
+
+@riverpod
+int counter(Ref ref) {
+  return 0;
+}
+```
+
+Then run:
+
+```bash
+dart run build_runner build
+```
+
+or
+
+```bash
+dart run build_runner watch
+```
+
+and Riverpod generates:
+
+```dart
+final counterProvider = AutoDisposeProvider<int>(...);
+```
+
+in `counter_provider.g.dart`.
+
+---
+
+## Benefits of riverpod_generator
+
+### 1. Less Boilerplate
+
+Without generator:
+
+```dart
+final userRepositoryProvider =
+    Provider<UserRepository>((ref) {
+  return UserRepository();
+});
+```
+
+With generator:
+
+```dart
+@riverpod
+UserRepository userRepository(Ref ref) {
+  return UserRepository();
+}
+```
+
+---
+
+### 2. Compile-Time Safety
+
+Provider names, types, and dependencies are generated automatically.
+
+Refactoring becomes safer because the generator updates references correctly.
+
+---
+
+### 3. Supports Parameters Easily
+
+Without generator:
+
+```dart
+final userProvider =
+    FutureProvider.family<User, int>((ref, id) async {
+  return api.getUser(id);
+});
+```
+
+With generator:
+
+```dart
+@riverpod
+Future<User> user(Ref ref, int id) async {
+  return api.getUser(id);
+}
+```
+
+Generated:
+
+```dart
+userProvider(id);
+```
+
+---
+
+### 4. Easier Async State Management
+
+Without generator:
+
+```dart
+final todosProvider =
+    AsyncNotifierProvider<TodosNotifier, List<Todo>>(
+      TodosNotifier.new,
+    );
+```
+
+With generator:
+
+```dart
+@riverpod
+class Todos extends _$Todos {
+  @override
+  Future<List<Todo>> build() async {
+    return repository.getTodos();
+  }
+}
+```
+
+Much less code.
+
+---
+
+### 5. Automatic Provider Types
+
+Generator determines the correct provider type based on your return type.
+
+| Return Type     | Generated Provider      |
+| --------------- | ----------------------- |
+| `String`        | `Provider<String>`      |
+| `Future<User>`  | `FutureProvider<User>`  |
+| `Stream<User>`  | `StreamProvider<User>`  |
+| `Notifier`      | `NotifierProvider`      |
+| `AsyncNotifier` | `AsyncNotifierProvider` |
+
+You don't need to remember which provider class to use.
+
+---
+
+### 6. Better IDE Support
+
+Generated providers are strongly typed and easier to navigate, rename, and refactor.
+
+---
+
+## Common Annotations
+
+### Simple Provider
+
+```dart
+@riverpod
+String appName(Ref ref) {
+  return 'Todo App';
+}
+```
+
+---
+
+### Future Provider
+
+```dart
+@riverpod
+Future<List<Todo>> todos(Ref ref) async {
+  return repository.getTodos();
+}
+```
+
+---
+
+### Family Provider
+
+```dart
+@riverpod
+Future<User> user(Ref ref, int id) async {
+  return api.getUser(id);
+}
+```
+
+Usage:
+
+```dart
+ref.watch(userProvider(1));
+```
+
+---
+
+### Notifier Provider
+
+```dart
+@riverpod
+class Counter extends _$Counter {
+  @override
+  int build() => 0;
+
+  void increment() {
+    state++;
+  }
+}
+```
+
+Usage:
+
+```dart
+ref.watch(counterProvider);
+ref.read(counterProvider.notifier).increment();
+```
+
+---
+
+## Packages Needed
+
+```yaml
+dependencies:
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^4.0.7
+
+dev_dependencies:
+  build_runner: ^2.16.1
+  riverpod_generator: ^4.0.9
+```
+
+---
+
+## Should you use it?
+
+For new Riverpod projects, **yes**. The Riverpod team generally recommends the generator approach because it reduces boilerplate, improves type safety, and makes complex providers (especially `AsyncNotifier` and `family`) much cleaner.
+
+Since you're learning Riverpod and coming from GetX, I'd recommend learning the **generator-based approach first**, because most modern Riverpod examples and production projects use `@riverpod` and `riverpod_generator`.
