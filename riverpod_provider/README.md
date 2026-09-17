@@ -326,8 +326,7 @@ FutureProvider.autoDispose.family // Detail screens
 This combination covers the majority of Riverpod use cases in production Flutter applications.
 
 ---
-
----
+# What is riverpod_generator ?
 
 `riverpod_generator` is a code-generation package for Riverpod that automatically creates providers for you using annotations.
 
