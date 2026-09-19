@@ -1,12 +1,11 @@
-
 # 1. FutureProvider
 
 `FutureProvider` is used to handle asynchronous operations such as:
 
-* API calls
-* Database queries
-* File reading
-* SharedPreferences loading
+- API calls
+- Database queries
+- File reading
+- SharedPreferences loading
 
 ```dart
 final userProvider = FutureProvider<User>((ref) async {
