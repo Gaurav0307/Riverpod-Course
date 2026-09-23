@@ -238,10 +238,10 @@ Memory Released
 
 Very useful for:
 
-* GPS tracking
-* Sensors
-* Camera streams
-* WebSocket screens
+- GPS tracking
+- Sensors
+- Camera streams
+- WebSocket screens
 
 ---
 
@@ -289,12 +289,12 @@ Cancel Chat A Stream
 | Feature           | FutureProvider | StreamProvider |
 | ----------------- | -------------- | -------------- |
 | Results           | One            | Many           |
-| API Call          | ✅              | ❌ Usually      |
-| Firestore         | ❌              | ✅              |
-| Socket.io         | ❌              | ✅              |
-| Real-time Updates | ❌              | ✅              |
-| Timer             | ❌              | ✅              |
-| GPS               | ❌              | ✅              |
+| API Call          | ✅             | ❌ Usually     |
+| Firestore         | ❌             | ✅             |
+| Socket.io         | ❌             | ✅             |
+| Real-time Updates | ❌             | ✅             |
+| Timer             | ❌             | ✅             |
+| GPS               | ❌             | ✅             |
 
 ---
 
@@ -405,20 +405,17 @@ StreamProvider        → Real-time data
 
 ### For Your Projects
 
-* **Business Listing App**
+- **Business Listing App**
+  - `FutureProvider` → Business Details API
+  - `StreamProvider` → Customer ↔ Business Chat
 
-  * `FutureProvider` → Business Details API
-  * `StreamProvider` → Customer ↔ Business Chat
+- **Chat App**
+  - `FutureProvider` → Load initial conversations
+  - `StreamProvider` → Real-time messages via Socket.io
 
-* **Chat App**
-
-  * `FutureProvider` → Load initial conversations
-  * `StreamProvider` → Real-time messages via Socket.io
-
-* **IoT Smart Environment System**
-
-  * `FutureProvider` → Device configuration
-  * `StreamProvider` → MQTT sensor data (Temperature, Humidity, Air Quality)
+- **IoT Smart Environment System**
+  - `FutureProvider` → Device configuration
+  - `StreamProvider` → MQTT sensor data (Temperature, Humidity, Air Quality)
 
 A useful rule is:
 
@@ -426,4 +423,626 @@ A useful rule is:
 Need data once?       → FutureProvider
 
 Need continuous data? → StreamProvider
+```
+#
+# Riverpod StreamNotifierProvider
+
+`StreamNotifierProvider` is the **stream equivalent of `AsyncNotifierProvider`**.
+
+Think of the relationship like this:
+
+```text
+FutureProvider
+    ↓
+Read-only async fetch
+
+AsyncNotifierProvider
+    ↓
+Async fetch + business logic
+```
+
+```text
+StreamProvider
+    ↓
+Read-only stream
+
+StreamNotifierProvider
+    ↓
+Stream + business logic
+```
+
+---
+
+# Why Not Just Use StreamProvider?
+
+`StreamProvider` is perfect for simple streams:
+
+```dart
+final clockProvider = StreamProvider<DateTime>((ref) {
+  return Stream.periodic(
+    const Duration(seconds: 1),
+    (_) => DateTime.now(),
+  );
+});
+```
+
+But what if you need:
+
+```text
+Connect Socket
+Disconnect Socket
+Reconnect Socket
+Send Message
+Mark Message Read
+Join Room
+Leave Room
+```
+
+That's business logic.
+
+Use **StreamNotifierProvider**.
+
+---
+
+# Basic Structure
+
+```text
+Provider
+   ↓
+StreamNotifier
+   ↓
+Stream<T>
+   ↓
+AsyncValue<T>
+```
+
+---
+
+# Simple Example
+
+```dart
+class ClockNotifier extends StreamNotifier<DateTime> {
+  @override
+  Stream<DateTime> build() {
+    return Stream.periodic(
+      const Duration(seconds: 1),
+      (_) => DateTime.now(),
+    );
+  }
+}
+```
+
+Provider:
+
+```dart
+final clockProvider =
+    StreamNotifierProvider<
+      ClockNotifier,
+      DateTime
+    >(ClockNotifier.new);
+```
+
+Usage:
+
+```dart
+final clock = ref.watch(clockProvider);
+```
+
+---
+
+# What Does build() Return?
+
+Unlike:
+
+```dart
+Notifier<T>
+```
+
+which returns:
+
+```dart
+T
+```
+
+and:
+
+```dart
+AsyncNotifier<T>
+```
+
+which returns:
+
+```dart
+Future<T>
+```
+
+a `StreamNotifier<T>` returns:
+
+```dart
+Stream<T>
+```
+
+Example:
+
+```dart
+@override
+Stream<User> build() {
+  return repository.watchCurrentUser();
+}
+```
+
+---
+
+# AsyncValue States
+
+Just like `StreamProvider`, watching a `StreamNotifierProvider` gives:
+
+```dart
+AsyncValue<T>
+```
+
+Possible states:
+
+```text
+AsyncLoading
+
+AsyncData
+
+AsyncError
+```
+
+---
+
+# UI with when()
+
+```dart
+ref.watch(chatProvider).when(
+  data: (messages) => MessageList(messages),
+  loading: () => const CircularProgressIndicator(),
+  error: (e, s) => Text(e.toString()),
+);
+```
+
+---
+
+# UI with switch()
+
+```dart
+switch (ref.watch(chatProvider)) {
+  case AsyncData(:final value):
+    return MessageList(value);
+
+  case AsyncError(:final error):
+    return Text(error.toString());
+
+  case AsyncLoading():
+    return const CircularProgressIndicator();
+}
+```
+
+---
+
+# Real Chat App Example
+
+This is very close to your Socket.io chat project.
+
+---
+
+Repository:
+
+```dart
+class ChatRepository {
+  Stream<List<Message>> watchMessages(
+    String chatId,
+  ) {
+    return socketController.stream;
+  }
+
+  Future<void> sendMessage(
+    Message message,
+  ) async {
+    socket.emit('message', message);
+  }
+}
+```
+
+---
+
+Notifier:
+
+```dart
+class ChatNotifier
+    extends StreamNotifier<List<Message>> {
+
+  late final ChatRepository _repository;
+
+  @override
+  Stream<List<Message>> build() {
+    _repository =
+        ref.read(chatRepositoryProvider);
+
+    return _repository.watchMessages(
+      "chat_101",
+    );
+  }
+
+  Future<void> sendMessage(
+    Message message,
+  ) async {
+    await _repository.sendMessage(
+      message,
+    );
+  }
+}
+```
+
+Provider:
+
+```dart
+final chatProvider =
+    StreamNotifierProvider<
+      ChatNotifier,
+      List<Message>
+    >(ChatNotifier.new);
+```
+
+Now the notifier can:
+
+```text
+Listen for messages
+Send messages
+Reconnect
+Join room
+Leave room
+```
+
+all in one place.
+
+---
+
+# Firestore Example
+
+```dart
+class UsersNotifier
+    extends StreamNotifier<List<User>> {
+
+  @override
+  Stream<List<User>> build() {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(User.fromFirestore)
+              .toList(),
+        );
+  }
+}
+```
+
+Provider:
+
+```dart
+final usersProvider =
+    StreamNotifierProvider<
+      UsersNotifier,
+      List<User>
+    >(UsersNotifier.new);
+```
+
+---
+
+# MQTT Example (Your IoT Project)
+
+```dart
+class SensorNotifier
+    extends StreamNotifier<SensorData> {
+
+  @override
+  Stream<SensorData> build() {
+    final mqtt =
+        ref.read(mqttServiceProvider);
+
+    return mqtt.sensorStream;
+  }
+
+  Future<void> toggleRelay(
+    int relay,
+  ) async {
+    await mqtt.publish(
+      'relay/$relay',
+      'toggle',
+    );
+  }
+}
+```
+
+Provider:
+
+```dart
+final sensorProvider =
+    StreamNotifierProvider<
+      SensorNotifier,
+      SensorData
+    >(SensorNotifier.new);
+```
+
+Benefits:
+
+```text
+Realtime sensor updates
+Relay control
+MQTT subscription management
+Reconnect logic
+```
+
+all in one notifier.
+
+---
+
+# Family
+
+Parameterized streams.
+
+```dart
+final chatProvider =
+    StreamNotifierProvider.family<
+      ChatNotifier,
+      List<Message>,
+      String
+    >(ChatNotifier.new);
+```
+
+Notifier:
+
+```dart
+class ChatNotifier
+    extends FamilyStreamNotifier<
+      List<Message>,
+      String> {
+
+  @override
+  Stream<List<Message>> build(
+    String chatId,
+  ) {
+    return repository.watchMessages(
+      chatId,
+    );
+  }
+}
+```
+
+Usage:
+
+```dart
+ref.watch(chatProvider("chat_101"));
+```
+
+---
+
+# Auto Dispose
+
+```dart
+final chatProvider =
+    StreamNotifierProvider.autoDispose<
+      ChatNotifier,
+      List<Message>
+    >(ChatNotifier.new);
+```
+
+Lifecycle:
+
+```text
+Open Chat
+↓
+Subscribe
+
+Leave Chat
+↓
+Dispose
+
+Cancel Stream
+```
+
+Perfect for:
+
+- Chat screens
+- GPS screens
+- Device monitoring
+- Temporary streams
+
+---
+
+# AutoDispose + Family
+
+Very common:
+
+```dart
+final chatProvider =
+    StreamNotifierProvider
+        .autoDispose
+        .family<
+          ChatNotifier,
+          List<Message>,
+          String>(
+  ChatNotifier.new,
+);
+```
+
+Each chat room gets its own stream.
+
+---
+
+# StreamProvider vs StreamNotifierProvider
+
+## StreamProvider
+
+```dart
+final chatProvider =
+    StreamProvider<List<Message>>(
+  (ref) {
+    return repository.watchMessages();
+  },
+);
+```
+
+Read-only.
+
+---
+
+## StreamNotifierProvider
+
+```dart
+class ChatNotifier
+    extends StreamNotifier<
+      List<Message>> {
+
+  @override
+  Stream<List<Message>> build() {
+    return repository.watchMessages();
+  }
+
+  Future<void> sendMessage() async {}
+
+  Future<void> reconnect() async {}
+
+  Future<void> joinRoom() async {}
+}
+```
+
+State + business logic.
+
+---
+
+| Feature                         | StreamProvider | StreamNotifierProvider |
+| ------------------------------- | -------------- | ---------------------- |
+| Listen Stream                   | ✅             | ✅                     |
+| Send Commands                   | ❌             | ✅                     |
+| Business Logic                  | ❌             | ✅                     |
+| Reconnect Logic                 | ❌             | ✅                     |
+| Recommended for Complex Streams | ❌             | ✅                     |
+
+---
+
+# AsyncNotifierProvider vs StreamNotifierProvider
+
+## AsyncNotifierProvider
+
+Returns:
+
+```dart
+Future<T>
+```
+
+Use for:
+
+```text
+Login
+Register
+CRUD APIs
+Pagination
+```
+
+---
+
+## StreamNotifierProvider
+
+Returns:
+
+```dart
+Stream<T>
+```
+
+Use for:
+
+```text
+Chat
+Firestore
+MQTT
+GPS
+WebSocket
+Live Dashboard
+```
+
+---
+
+| Provider                 | Returns     |
+| ------------------------ | ----------- |
+| `NotifierProvider`       | `T`         |
+| `AsyncNotifierProvider`  | `Future<T>` |
+| `StreamNotifierProvider` | `Stream<T>` |
+
+---
+
+# Riverpod Generator Version
+
+Modern Riverpod projects often use:
+
+```dart
+@riverpod
+class Chat extends _$Chat {
+  @override
+  Stream<List<Message>> build(
+    String chatId,
+  ) {
+    return repository.watchMessages(
+      chatId,
+    );
+  }
+
+  Future<void> sendMessage(
+    Message message,
+  ) async {
+    await repository.sendMessage(
+      message,
+    );
+  }
+}
+```
+
+Generated provider:
+
+```dart
+chatProvider(chatId)
+```
+
+No manual provider declaration needed.
+
+---
+
+# When Should You Use StreamNotifierProvider?
+
+Use it when you need:
+
+✅ Realtime updates
+
+✅ Business logic around a stream
+
+✅ WebSocket / Socket.io
+
+✅ MQTT
+
+✅ Firestore
+
+✅ Live dashboards
+
+✅ GPS tracking
+
+✅ Sensor monitoring
+
+For your projects:
+
+- **Chat App** → `StreamNotifierProvider`
+- **Socket.io Messaging** → `StreamNotifierProvider`
+- **IoT MQTT Sensor Updates** → `StreamNotifierProvider`
+- **Firestore Realtime Data** → `StreamNotifierProvider`
+
+A practical rule:
+
+```text
+Need realtime data only?
+→ StreamProvider
+
+Need realtime data + actions/business logic?
+→ StreamNotifierProvider
 ```

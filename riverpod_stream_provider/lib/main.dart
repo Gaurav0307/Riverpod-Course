@@ -2,6 +2,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_stream_provider/pages/timer/timer_page.dart';
 
 import 'pages/ticker/ticker_page.dart';
 import 'widgets/custom_button.dart';
@@ -50,7 +51,10 @@ class MyHomePage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           shrinkWrap: true,
-          children: const [CustomButton(title: 'Ticker', child: TickerPage())],
+          children: const [
+            CustomButton(title: 'Ticker', child: TickerPage()),
+            CustomButton(title: 'Timer', child: TimerPage()),
+          ],
         ),
       ),
     );
