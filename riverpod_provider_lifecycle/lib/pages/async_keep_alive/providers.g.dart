@@ -137,7 +137,7 @@ final class GetProductProvider
   }
 }
 
-String _$getProductHash() => r'30e3354445e502cba86d7a91b86c5b9bb68d3643';
+String _$getProductHash() => r'ad3c93b4ee613d7c8806bea8d8f7a01b7f3ca852';
 
 final class GetProductFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Product>, int> {
