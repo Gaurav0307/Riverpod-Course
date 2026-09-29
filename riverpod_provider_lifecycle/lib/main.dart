@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Provider Lifecycle',
       debugShowCheckedModeBanner: false,
-       theme: ThemeData(
+      theme: ThemeData(
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.deepPurple.shade400,
