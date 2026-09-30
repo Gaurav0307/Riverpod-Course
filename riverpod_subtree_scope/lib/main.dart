@@ -2,22 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
-import 'package:riverpod_sync_provider_for_async_apis/providers/providers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'pages/my_home_page.dart';
+import 'pages/example1_page.dart';
+import 'pages/example2_page.dart';
+import 'widgets/custom_button.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize SharedPreferences
-  final preferences = await SharedPreferences.getInstance();
-
+void main() {
   runApp(
     DevicePreview(
       enabled: kDebugMode,
       builder: (context) => ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
         // retry: (_, __) => null, // Disables automatic retries globally if exception is thrown.
         child: MyApp(),
       ),
@@ -31,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sync Provider for Async API',
+      title: 'Subtree Scoping',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
@@ -47,6 +41,32 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 30),
+          shrinkWrap: true,
+          children: const [
+            CustomButton(
+              title: 'Usage Example 1',
+              child: Example1Page(),
+            ),
+            CustomButton(
+              title: 'Usage Example 2',
+              child: Example2Page(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
