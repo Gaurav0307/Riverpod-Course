@@ -28,6 +28,7 @@ class _AddTodoPageState extends ConsumerState<AddTodoPage> {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(SnackBar(content: Text("Todo($value) added!")));
+            
           _controller.clear();
         case MutationError(:final error):
           ScaffoldMessenger.of(context)

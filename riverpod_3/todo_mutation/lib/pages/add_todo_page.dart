@@ -72,7 +72,11 @@ class _AddTodoPageState extends ConsumerState<AddTodoPage> {
 
                       messenger
                         ..hideCurrentSnackBar()
-                        ..showSnackBar(const SnackBar(content: Text("Todo added!")));
+                        ..showSnackBar(
+                          const SnackBar(content: Text("Todo added!")),
+                        );
+
+                      _controller.clear();
                     } catch (e) {
                       messenger
                         ..hideCurrentSnackBar()
